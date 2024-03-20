@@ -405,9 +405,9 @@ async function fetchIndexEnd(contract) {
 }
 async function fetchAllIssues(contract, issueCount) {
   const issues = [];
-  for (let i = 0; i < issueCount; i++) {
+  for (let i = 1; i < Number(issueCount); i++) {
     const issue = await contract.issues(i);
-    issues.push(issue);
+    issues.push({ [i]: issue });
   }
   return issues;
 }
