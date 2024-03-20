@@ -401,9 +401,7 @@ const contractAddress = "0xE6F9cd5bf6A4341f674229669F33D8586A7968A2";
 const contract = new ethers.Contract(contractAddress, contractABI, provider);
 async function fetchIndexEnd(contract) {
   const indexEnd = await contract.indexEnd();
-  console.log(indexEnd);
-  console.log(Object.keys(indexEnd));
-  // return indexEnd.toNumber(); // Convert BigNumber to a number
+  return indexEnd;
 }
 async function fetchAllIssues(contract, issueCount) {
   const issues = [];
