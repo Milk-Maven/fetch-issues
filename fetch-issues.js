@@ -1,4 +1,9 @@
 const { ethers } = require("ethers");
+const fs = require("fs");
+const converter = require("json-2-csv");
+const arbitrumRpcUrl = "https://arb1.arbitrum.io/rpc";
+const provider = new ethers.JsonRpcProvider(arbitrumRpcUrl);
+const contractAddress = "0xE6F9cd5bf6A4341f674229669F33D8586A7968A2";
 const contractABI = [
   {
     inputs: [
@@ -395,31 +400,51 @@ const contractABI = [
     type: "function",
   },
 ];
-const arbitrumRpcUrl = "https://arb1.arbitrum.io/rpc";
-const provider = new ethers.JsonRpcProvider(arbitrumRpcUrl);
-const contractAddress = "0xE6F9cd5bf6A4341f674229669F33D8586A7968A2";
 const contract = new ethers.Contract(contractAddress, contractABI, provider);
+
 async function fetchIndexEnd(contract) {
   const indexEnd = await contract.indexEnd();
   return indexEnd;
 }
+
 async function fetchAllIssues(contract, issueCount) {
   const issues = [];
   for (let i = 1; i < Number(issueCount); i++) {
     const issue = await contract.issues(i);
-    issues.push({ [i]: issue });
+    issues.push(issue);
   }
   return issues;
 }
 
-// Example: fetching issues when you know the count
-fetchIndexEnd(contract)
-  .then((indexEnd) => {
-    return fetchAllIssues(contract, indexEnd);
-  })
-  .then((issues) => {
-    console.log("Fetched issues:", issues);
-  })
-  .catch((error) => {
-    console.error("Error fetching issues:", error);
-  });
+async function convertIssuesToCsvAndSave(issues) {
+  try {
+    const issuesFormatted = issues.map((issue, index) => {
+      return {
+        index: index + 1,
+        user: issue.user,
+        issueAmount: issue.issueAmount.toString(),
+        issueTime: issue.issueTime.toString(),
+        isStaking: issue.isStaking,
+      };
+    });
+
+    let csv = converter.json2csv(issuesFormatted);
+    fs.writeFileSync("issues.csv", csv);
+  } catch (error) {
+    console.error("Error converting issues to CSV:", error);
+  }
+}
+
+async function fetchAndConvertIssues() {
+  try {
+    const indexEnd = await fetchIndexEnd(contract);
+    const issues = await fetchAllIssues(contract, indexEnd);
+    await convertIssuesToCsvAndSave(issues);
+    console.log(issues);
+  } catch (error) {
+    console.error("Error fetching or converting issues:", error);
+  }
+}
+
+// Example usage
+fetchAndConvertIssues();
